@@ -1,0 +1,56 @@
+[
+  {
+    "name": "Original HaMeR",
+    "checkpoint": "_DATA/hamer_ckpts/checkpoints/hamer.ckpt",
+    "metrics": {
+      "mode_mpjpe": 144.25920640863478,
+      "mode_re": 18.34154391847551
+    },
+    "losses": {
+      "loss": 354.068172454834,
+      "loss_keypoints_2d": 33833.7216796875,
+      "loss_keypoints_3d": 290.38000679016113,
+      "loss_global_orient": 364.84893798828125,
+      "loss_hand_pose": 589.1128997802734,
+      "loss_betas": 515.9865112304688
+    },
+    "num_samples": 1024,
+    "elapsed_sec": 39.603838205337524
+  },
+  {
+    "name": "Original WiLoR",
+    "checkpoint": "_DATA/wilor_ckpts/checkpoints/wilor_final.ckpt",
+    "metrics": {
+      "mode_mpjpe": 128.61180259473622,
+      "mode_re": 18.05587839242071
+    },
+    "losses": {
+      "loss": 351.98638916015625,
+      "loss_keypoints_2d": 33789.269775390625,
+      "loss_keypoints_3d": 257.204927444458,
+      "loss_global_orient": 328.26338386535645,
+      "loss_hand_pose": 635.3178672790527,
+      "loss_betas": 539.7416229248047
+    },
+    "num_samples": 1024,
+    "elapsed_sec": 39.52568316459656
+  },
+  {
+    "name": "Ours WiLoR",
+    "checkpoint": "logs/train/runs/wilor/checkpoints/last.ckpt",
+    "metrics": {
+      "mode_mpjpe": 143.1702198497951,
+      "mode_re": 17.762325971387327
+    },
+    "losses": {
+      "loss": 353.94546127319336,
+      "loss_keypoints_2d": 33826.9365234375,
+      "loss_keypoints_3d": 288.35437202453613,
+      "loss_global_orient": 353.631383895874,
+      "loss_hand_pose": 637.0008125305176,
+      "loss_betas": 535.4935340881348
+    },
+    "num_samples": 1024,
+    "elapsed_sec": 38.91821265220642
+  }
+]
