@@ -24,22 +24,22 @@
 
 | XHAND1 | Inspire RH56 | SharpaWave |
 |:---:|:---:|:---:|
-| ![XHAND1](images/xhand1.png) | ![Inspire RH56](images/inspire_rh56.png) | ![SharpaWave](images/sharpawave.png) |
+| ![XHAND1](assets/xhand1.png) | ![Inspire RH56](assets/inspire_rh56.png) | ![SharpaWave](assets/sharpawave.png) |
 
 | ALLEX Hand | Shadow Dexterous | Allegro Hand V4 |
 |:---:|:---:|:---:|
-| ![ALLEX Hand](images/allex_hand.png) | ![Shadow Hand](images/shadow_hand.png) | ![Allegro Hand](images/allegro_hand.png) |
+| ![ALLEX Hand](assets/allex_hand.png) | ![Shadow Hand](assets/shadow_hand.png) | ![Allegro Hand](assets/allegro_hand.png) |
 
 | LEAP Hand | Ability Hand | Faive Hand |
 |:---:|:---:|:---:|
-| ![LEAP Hand](images/leap_hand.png) | ![Ability Hand](images/ability_hand.png) | ![Faive Hand](images/faive_hand.png) |
+| ![LEAP Hand](assets/leap_hand.png) | ![Ability Hand](assets/ability_hand.png) | ![Faive Hand](assets/faive_hand.png) |
 
 ---
 
 ## Detailed Profiles
 
 ### 1. XHAND1 — Robotera (China)
-![XHAND1](images/xhand1.png)
+![XHAND1](assets/xhand1.png)
 
 - **DoF:** 12 fully active (Thumb 3, Index 3, Middle/Ring/Little 2 each)
 - **Size:** 191 mm x 94 mm x 47 mm, 1,100 g
@@ -55,7 +55,7 @@
 ---
 
 ### 2. Inspire RH56 Series — Inspire Robots (China)
-![Inspire RH56](images/inspire_rh56.png)
+![Inspire RH56](assets/inspire_rh56.png)
 
 - **DoF:** 6 DoF (12 motor joints via 6 miniature linear servo actuators + linkage mechanism)
 - **Size:** Human-sized, 540–620 g depending on variant
@@ -77,7 +77,7 @@
 ---
 
 ### 3. SharpaWave — Sharpa (Singapore)
-![SharpaWave](images/sharpawave.png)
+![SharpaWave](assets/sharpawave.png)
 
 - **DoF:** 22 active DoF
 - **Size:** 200 mm x 90 mm x 50 mm (1:1 human-scale), 1,200 g
@@ -93,7 +93,7 @@
 ---
 
 ### 4. ALLEX Hand — WIRobotics (South Korea)
-![ALLEX Hand](images/allex_hand.png)
+![ALLEX Hand](assets/allex_hand.png)
 
 - **DoF:** 15 per hand
 - **Size:** Human-hand-sized, ~700 g
@@ -110,7 +110,7 @@
 ---
 
 ### 5. Shadow Dexterous Hand — Shadow Robot (UK)
-![Shadow Hand](images/shadow_hand.png)
+![Shadow Hand](assets/shadow_hand.png)
 
 - **DoF:** 24 (20 actuated + 4 under-actuated)
 - **Size:** Human-sized
@@ -122,7 +122,7 @@
 ---
 
 ### 6. Allegro Hand V4 — Wonik Robotics (South Korea)
-![Allegro Hand](images/allegro_hand.png)
+![Allegro Hand](assets/allegro_hand.png)
 
 - **DoF:** 16 (4 per finger x 4 fingers)
 - **Fingers:** 4 (no pinky)
@@ -134,7 +134,7 @@
 ---
 
 ### 7. LEAP Hand — Carnegie Mellon University (USA)
-![LEAP Hand](images/leap_hand.png)
+![LEAP Hand](assets/leap_hand.png)
 
 - **DoF:** 16
 - **Fingers:** 4
@@ -145,7 +145,7 @@
 ---
 
 ### 8. Ability Hand — PSYONIC (USA)
-![Ability Hand](images/ability_hand.png)
+![Ability Hand](assets/ability_hand.png)
 
 - **DoF:** 6 (each finger individually actuated + thumb rotation)
 - **Fingers:** 5
@@ -157,7 +157,7 @@
 ---
 
 ### 9. Faive Hand — Faive Robotics
-![Faive Hand](images/faive_hand.png)
+![Faive Hand](assets/faive_hand.png)
 
 - **DoF:** 16, tendon-driven
 - **Fingers:** 5
