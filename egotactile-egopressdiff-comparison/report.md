@@ -73,7 +73,7 @@ EgoTactile's own dataset table also situates both against PressureVisionDB (3.0M
 
 ## 4. What the debug visualizations show
 
-`vis_debugs/sample_video_tactile/` contains four sample clips from the EgoTactile **gloved-hand set** — `p001-Cucumber`, `p001-TennisBall`, `p003-PureMilk-1000ml`, `p005-Dumbbell` (note TennisBall and Dumbbell are two of the five Object-Held-Out *test* objects). Each clip provides per-frame `*_rgb.png` / `*_pressure.png` pairs, an mp4, and a `.txt` with the clip-level text metadata.
+`vis_debugs/sample_video_tactile/` contains eleven sample clips — eight from the **gloved-hand set** (e.g. `p001-Cucumber`, `p001-TennisBall`, `p003-PureMilk-1000ml`, `p005-Dumbbell`; note TennisBall and Dumbbell are two of the five Object-Held-Out *test* objects) and three from the **bare-hand set** (`p002-BellPepper`, `p012-CocaCola-500ml`, `p001-ShinRamyunCupNoodles`). Each clip provides per-frame `*_rgb.png` / `*_pressure.png` pairs, an mp4, and a `.txt` with the clip-level text metadata.
 
 The `p001-Cucumber-repeat0000` clip has 529 synchronized frame pairs (≈35 s at the 15 Hz master clock). Its metadata file reads:
 
@@ -90,6 +90,21 @@ This is exactly the paper's **text-metadata conditioning signal** (object weight
 Everything matches the paper's described setup: green-screen backdrop, gloved hand, egocentric view. The pressure heatmaps use the canonical hand layout from the paper's Figure 5 (five finger columns — thumb to little finger — on top, palm block at the bottom). During the hold, pressure concentrates on the index/middle finger columns with the thumb pads active — a plausible precision grasp for a 246 g cucumber — while the palm stays mostly inactive, illustrating the paper's point that this is a delicate-grasp object rather than a power grasp. The full clip is in `assets/cucumber_clip.mp4`.
 
 One thing visible in the samples that the paper also flags: with the object held in front of the camera, the actual contact regions (finger pads on the far side of the cucumber) are **fully occluded** in the RGB view — the core motivation for the generative, physically-conditioned formulation.
+
+### 4.1 How the force values are obtained (taxel → heatmap → readout)
+
+Ten additional force-annotated clips (`*_force.mp4`, e.g. `p005-Dumbbell-repeat0000_force.mp4`) add a bottom panel showing total force over time with a live per-hand readout in Newtons. The chain from raw sensor to that number:
+
+1. **Raw measurement — per taxel.** Each frame in a clip's `data.json` carries a `sensor_256` vector per hand: a 256-slot array in which each active slot is one physical sensing element on the glove reporting its own scalar force (0–350 N range per sensor, README). The active layout per hand (defined in `scripts/denoise.py`) is:
+   - **Fingers:** 5 fingers × 12 taxels (4 rows of 3 down each finger) = 60 taxels
+   - **Palm:** 72 taxels
+   - **Bend sensors:** 5 (one per finger) — flexion, not force
+
+   So each frame is a spatial force map over ~132 force taxels per hand at the 15 Hz master clock, synchronized with the video. (These finger + palm + bend elements are the "162-taxel" glove of the paper.)
+2. **Heatmap rendering (right panel of the videos).** Each taxel value is placed at its position on the 2-D canonical hand layout (`LEFT/RIGHT_MASK_INDEXED` in `scripts/raw_to_training.py`), spread with a small Gaussian, and colored by magnitude — the heatmap *is* the per-sensor force, showing which fingertips/palm regions press and how hard. This is the same fixed linear rendering operator that links the sparse 162-sensor representation to the dense canonical heatmap in the paper.
+3. **Scalar readout (bottom panel) — derived, not measured.** Per frame: denoise the per-taxel values, drop the 5 bend sensors, zero readings under a 5 N noise floor, then **sum over all ~132 force taxels**. "RH 1034 N" therefore means "sum of all individual contact forces across the hand," not a single-gauge grip force — heavy/large-contact objects sum high (Dumbbell peaks at 1151 N) while light ones stay low (Sponge peaks at 38 N).
+
+Peak summed force across the ten annotated samples: Dumbbell 1151 N, CocaCola-500ml 887 N, 7Up-550ml 828 N, Apple 817 N, PureMilk-1000ml 612 N, TennisBall 536 N, RubiksCube 394 N, BellPepper 363 N, ShinRamyunCupNoodles 363 N, Sponge 38 N — ordering that tracks object weight and grasp type, as the paper's physical-ambiguity argument predicts.
 
 ---
 
