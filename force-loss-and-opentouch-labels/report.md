@@ -113,36 +113,9 @@ global token with a **per-vertex readout**: each of the 778 MANO vertices is
 a learned query that cross-attends the patch tokens of its own frame,
 reading pressure from the image region it corresponds to.
 
-```mermaid
-flowchart LR
-  IN["input clip<br/>16 frames, 256×256 crops"] --> VIT["ViT-H backbone<br/><b>frozen</b>, 630M<br/>16×12 patch tokens, 1280-d"]
-  subgraph SA["stream A — pose (frozen)"]
-    STA["temporal attention<br/>st_module, 13.9M"] --> HEAD["MANO head"] --> MESH["θ, β, cam →<br/>posed mesh, 778 verts"]
-  end
-  subgraph SB["stream B — touch (trainable, 13.9M + 0.4M)"]
-    STB["temporal attention<br/>st_module_touch<br/>(warm-started copy of A)"] --> VTH["VertexTouchHead"]
-  end
-  VIT --> STA
-  VIT --> STB
-  VTH --> CV["contact logits ĉᵥ (778)"]
-  VTH --> PV["force p̃ᵥ (778)"]
-  CV --> GATE["gate<br/>p̂ᵥ = σ(ĉᵥ)·relu(p̃ᵥ)·s"]
-  PV --> GATE
-  GATE --> RES["pressure field on<br/>stream-A mesh"]
-  MESH --> RES
-```
+![HAWORTactileForceV2 architecture](assets/v2_architecture.png)
 
-Inside the VertexTouchHead (~0.4M params, sized like HOPE's readout):
-
-```mermaid
-flowchart LR
-  F["stream-B frame features<br/>16×12×1280"] --> PR["Linear 1280→64"] --> MEM["192 memory tokens"]
-  Q["778 learned vertex queries<br/>64-d embeddings"] --> DEC["Transformer decoder<br/>L=2, 4 heads, d=64<br/>(vertex ↔ patch cross-attention)"]
-  MEM --> DEC
-  DEC --> O["Linear 64→2 per vertex"]
-  O --> C["contact logit ĉᵥ"]
-  O --> P["normalized force p̃ᵥ"]
-```
+*Top: two-stream overview. Bottom: inside the VertexTouchHead (~0.4M params, sized like HOPE's readout).*
 
 Three design decisions worth defending in review:
 
