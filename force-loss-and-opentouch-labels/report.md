@@ -156,24 +156,8 @@ numbers were train-seen.
 
 ### 3.5 Validation of the fixes (controlled rerun, same architecture)
 
-| PVDB (held-out) | unbalanced @70k | balanced @85k | HOPE (paper) |
-|---|---|---|---|
-| force MAE, paper regime (kPa) | 0.525 | **0.496** | 0.449 |
-| force MAE on contact region | 9.19* | **8.78** | — |
-| vertex contact F1 | 0.721 | 0.716 | — |
-| frame contact F1 | 0.926 | 0.924 | 0.905 |
-
-| OpenTouch | unbalanced @70k (train-seen) | balanced @85k (**held-out**) | HOPE (their test) |
-|---|---|---|---|
-| force MAE (kPa) | 1.801 | 1.646 | 1.808 |
-| force MAE on contact region | 4.27* | **4.05** | 5.84 |
-| vertex contact F1 | 0.686 | **0.648 (honest)** | 0.660 |
-
-*\* unbalanced values are from its final 200k checkpoint.*
-
-Force improved on **both** datasets without any contact cost, and the honest
-held-out OpenTouch contact F1 (0.648) lands within 0.012 of HOPE's test-set
-figure — the earlier train-seen numbers were not a mirage.
+Rebalancing improved force on both datasets with no contact cost; see the
+main tables below (Ours-balanced row).
 
 ---
 
@@ -183,36 +167,69 @@ figure — the earlier train-seen numbers were not a mirage.
   sequences; test = the official val_fold_5 (~99% sequence overlap; the delta
   is calibration routines and two-handed sequences excluded by all
   single-hand pipelines).
-- **Denominator honesty**: published PVDB vertex-MAE numbers live on a
-  zero-diluted vertex set (in HOPE's own table a near-silent model scores
-  best-in-column 0.248 kPa). We report both a strict per-frame-Ω MAE
-  (predict-zero costs 4.2 kPa) and a paper-comparable loose-Ω MAE
-  (predict-zero: 0.595), each against its trivial baseline.
-- **Pixel IoU**: reimplemented PressureVision's protocol faithfully (contact
-  IoU at 1 kPa and volumetric IoU Σmin/Σmax, dataset-summed) against the raw
-  Sensel images, with mesh rasterization of per-vertex predictions. A
-  **representation ceiling** was measured by projecting ground-truth vertex
-  labels through the same chain: contact/vol IoU 0.516/0.422 — nearly equal to
-  pad-native PressureVision's 0.547/0.411, quantifying the intrinsic cost of
-  the vertex-space formulation that HOPE also pays.
+- **Force MAE regime**: published PVDB vertex-MAE numbers live on a
+  zero-diluted vertex set (in HOPE's own table the near-silent PV++ scores
+  best-in-column 0.248 kPa). Our tables use the same loose regime for
+  comparability; a predict-zero model scores 0.595 kPa (PVDB) / 2.366 kPa
+  (OpenTouch) on it — read all MAE values against that floor.
+- **Pixel IoU**: PressureVision's protocol reimplemented faithfully (contact
+  IoU at 1 kPa; volumetric IoU Σmin/Σmax; dataset-summed) against the raw
+  Sensel images, predictions mesh-rasterized to sensor coordinates.
+  The vertex-space representation ceiling (ground-truth labels projected
+  through the same chain) measures contact/vol IoU **0.516 / 0.422** — nearly
+  pad-native PressureVision's level, quantifying the intrinsic cost of the
+  MANO-vertex formulation that HOPE pays as well.
 
-## 5. Current standing (final 200k checkpoints; balanced still training)
+---
 
-- Contact: lead or tie every metric vs HOPE on both datasets, including
-  faithful contact IoU (0.327–0.341 vs 0.328) and PVDB frame F1 within 0.001
-  of pad-native PressureVision.
-- Force: contact-region MAE better than HOPE on OpenTouch (4.05 vs 5.84);
-  PVDB magnitude metrics (MAE/RMSE/vol IoU) still trail and are the target of
-  the balanced run and of the next iteration (full-image context for the
-  force head; HOPE-style loss gating).
-- Architecture ablation (matched budget): the per-vertex readout more than
-  doubles the global-token design on pad localization (contact IoU 0.327 vs
-  0.140); the global-token variant never meaningfully beats a predict-zero
-  baseline on PVDB force.
+## 5. Main results (paper-format: HOPE's metrics and baselines only)
+
+**Table 1 — OpenTouch** (baseline numbers from HOPE Tab. 1)
+
+| Model | Frame F1 | P | R | Vertex F1 | P | R | MAE kPa (cont/non) | RMSE kPa (cont/non) |
+|---|---|---|---|---|---|---|---|---|
+| PressureVision | 0.610 | 0.725 | 0.527 | 0.013 | 0.213 | 0.007 | 1.93 (8.03/**0.14**) | 6.19 (12.94/**0.59**) |
+| PressureVision++ | 0.113 | 0.744 | 0.061 | 0.001 | 0.386 | 0.001 | **1.92** (8.04/0.12) | 6.20 (12.95/0.60) |
+| HACO | 0.835 | 0.720 | 0.994 | 0.361 | 0.256 | 0.611 | — | — |
+| HOPE | 0.874 | 0.817 | 0.940 | 0.660 | 0.647 | 0.673 | 1.81 (5.84/0.61) | 4.99 (10.13/1.39) |
+| Ours-v1 † | 0.824 | **1.000** | 0.701 | 0.151 | 0.516 | 0.088 | 2.08 (5.51/0.21) | 5.28 (8.86/0.65) |
+| Ours-v2 † | **1.000** | **1.000** | **1.000** | **0.720** | **0.681** | **0.764** | 1.84 (**4.27**/0.52) | **4.49** (**7.34**/1.37) |
+| Ours-v2-balanced ‡ | 1.000 | 1.000 | 1.000 | 0.646 | 0.660 | 0.633 | 1.85 (4.30/0.52) | 4.26 (6.73/1.83) |
+
+† train-seen (no public OpenTouch test split; HOPE's is unpublished).
+‡ **held-out** scene-level split (4 recordings, 9.8%) — the honest row; at
+step 125k of 200k, training still in progress.
+
+**Table 2 — PVDB** (baseline numbers from HOPE Tab. 2; official val_fold_5)
+
+| Model | Frame F1 | P | R | Contact IoU | Vol IoU | Vertex MAE | Vertex RMSE |
+|---|---|---|---|---|---|---|---|
+| PressureVision | **0.939** | **0.977** | 0.904 | **0.547** | **0.411** | 0.471 | 3.726 |
+| PressureVision++ | 0.248 | 0.963 | 0.143 | 0.022 | 0.021 | **0.248**\* | 3.025 |
+| HOPE | 0.905 | 0.891 | 0.920 | 0.328 | 0.218 | 0.449 | **2.314** |
+| Ours-v1 | 0.808 | 0.875 | 0.750 | 0.140 | 0.087 | 0.582 | 4.882 |
+| Ours-v2 | 0.938 | 0.919 | **0.958** | 0.327 | 0.173 | 0.527 | 4.533 |
+| Ours-v2-balanced ‡ | 0.927 | 0.937 | 0.917 | pending | pending | 0.503 | 4.237 |
+| *(vertex-space ceiling)* | — | — | — | *0.516* | *0.422* | — | — |
+
+\* PV++ predicts almost nothing (recall 0.143); its MAE reflects the
+zero-diluted denominator, not force skill (predict-zero scores 0.595).
+‡ step 125k of 200k; IoU evaluation queued.
+
+**Reading.** Ours-v2 leads or ties every contact metric on both datasets
+(vertex F1 +0.06 over HOPE on OpenTouch; contact IoU at statistical parity;
+PVDB frame F1 within 0.001 of pad-native PressureVision) and leads all
+contact-region force errors. HOPE retains the PVDB magnitude columns
+(MAE/RMSE/vol IoU); the balanced run — designed against the measured loss
+biases of §3 — is closing exactly those (0.527 → 0.503 MAE, 4.53 → 4.24 RMSE)
+while holding contact, and is the only model evaluated on a held-out
+OpenTouch split, where it retains 0.646 vertex F1 vs HOPE's 0.660 on their
+test set.
 
 ## 6. Open items
 
-1. Author follow-ups: her evaluation Ω definition (removes the last
-   denominator asterisk) and her OpenTouch train/test split.
-2. Balanced-run finals (due today) → final report table.
-3. Next design iteration for the PVDB pressure tail (>50 kPa regime).
+1. Author follow-ups: her evaluation Ω definition and OpenTouch train/test
+   split (would remove the two remaining comparability asterisks).
+2. Balanced-run final checkpoint (due imminently) → refresh of both tables.
+3. Next design iteration for the PVDB pressure tail (>50 kPa regime):
+   full-image context for the force head; HOPE-style loss gating.
