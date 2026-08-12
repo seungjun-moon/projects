@@ -182,6 +182,13 @@ main tables below (Ours-balanced row).
 
 ---
 
+**Evaluation set sizes.** PVDB: official val_fold_5 — 412 sequences × 4
+cameras = 1,648 clips, 90,560 frames (26,368 scored via one 16-frame window
+per clip; HOPE's test: 24,544 frames). OpenTouch train-seen set: 2,538 clips /
+269,837 frames (40,608 scored). OpenTouch scene-level holdout: 249 clips /
+27,018 frames (3,984 scored) — larger than HOPE's own OT test split
+(190 clips / 18,062 frames).
+
 ## 5. Main results (paper-format: HOPE's metrics and baselines only)
 
 **Table 1 — OpenTouch** (baseline numbers from HOPE Tab. 1)
