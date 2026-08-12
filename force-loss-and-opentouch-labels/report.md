@@ -207,6 +207,15 @@ per clip; HOPE's test: 24,544 frames). OpenTouch train-seen set: 2,538 clips /
 ‡ **held-out** scene-level split (4 recordings, 9.8%) — the honest row; at
 step 125k of 200k, training still in progress.
 
+*Overall MAE/RMSE are mixture-weighted blends of the (cont/non) components,
+and the blend weight is a property of each eval set (contact occupancy:
+HOPE's test ≈ 23%, our sets ≈ 35%). Across different eval sets the
+decomposed components are the comparison-grade numbers: e.g. Ours-balanced
+beats HOPE on BOTH components (4.30 < 5.84 and 0.52 < 0.61) — under HOPE's
+own mixing weight its components blend to ≈ 1.39 vs their 1.81 — while the
+raw overall (1.85 vs 1.81) reverses purely due to our contact-heavier eval
+data (Simpson's paradox).*
+
 **Table 2 — PVDB** (baseline numbers from HOPE Tab. 2; official val_fold_5)
 
 | Model | Frame F1 | P | R | Contact IoU | Vol IoU | Vertex MAE | Vertex RMSE |
