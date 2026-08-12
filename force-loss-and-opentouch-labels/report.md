@@ -231,14 +231,14 @@ per clip; HOPE's test: 24,544 frames). OpenTouch train-seen set: 2,538 clips /
 | PressureVision | 0.610 | 0.725 | 0.527 | 0.013 | 0.213 | 0.007 | 1.93 (8.03/0.14) | 1.93 | 6.19 (12.94/**0.59**) | 6.19 |
 | PressureVision++ | 0.113 | 0.744 | 0.061 | 0.001 | 0.386 | 0.001 | 1.92 (8.04/**0.12**) | 1.92 | 6.20 (12.95/0.60) | 6.20 |
 | HACO | 0.835 | 0.720 | 0.994 | 0.361 | 0.256 | 0.611 | — | — | — | — |
-| HOPE | 0.874 | 0.817 | 0.940 | 0.660 | 0.647 | 0.673 | **1.81** (5.84/0.61) | 1.81 | 4.99 (10.13/1.39) | 4.99 |
+| HOPE | 0.874 | 0.817 | 0.940 | 0.660 | 0.647 | 0.673 | 1.81 (5.84/0.61) | 1.81 | 4.99 (10.13/1.39) | 4.99 |
 | Ours-v1 † | 0.824 | **1.000** | 0.701 | 0.151 | 0.516 | 0.088 | 2.08 (5.51/0.21) | 1.43 | 5.28 (8.86/0.65) | 4.28 |
-| Ours-v2 † | **1.000** | **1.000** | **1.000** | **0.720** | **0.681** | **0.764** | 1.84 (**4.27**/0.52) | **1.38** | 4.49 (7.34/1.37) | 3.71 |
-| Ours-v2-balanced ‡ | **1.000** | **1.000** | **1.000** | 0.646 | 0.660 | 0.633 | 1.85 (4.30/0.52) | **1.38** | **4.26** (**6.73**/1.83) | **3.60** |
+| Ours-v2 † | **1.000** | **1.000** | **1.000** | **0.720** | **0.681** | **0.764** | 1.84 (4.27/0.52) | 1.38 | 4.49 (7.34/1.37) | 3.71 |
+| Ours-v2-balanced ‡ | **1.000** | **1.000** | **1.000** | 0.647 | 0.646 | 0.649 | **1.77** (**4.06**/0.52) | **1.33** | **4.09** (**6.47**/1.72) | **3.45** |
 
 † train-seen (no public OpenTouch test split; HOPE's is unpublished).
-‡ **held-out** scene-level split (4 recordings, 9.8%) — the honest row; at
-step 125k of 200k, training still in progress.
+‡ **held-out** scene-level split (4 recordings, 9.8%) — the honest row;
+final 200k checkpoint.
 
 *Overall MAE/RMSE are mixture-weighted blends of the (cont/non) components,
 and the blend weight is a property of each eval set (contact occupancy:
@@ -261,12 +261,12 @@ v2 models lead all force-error columns.*
 | HOPE | 0.905 | 0.891 | 0.920 | 0.328 | 0.218 | 0.449 | **2.314** |
 | Ours-v1 | 0.808 | 0.875 | 0.750 | 0.140 | 0.087 | 0.582 | 4.882 |
 | Ours-v2 | 0.938 | 0.919 | **0.958** | 0.327 | 0.173 | 0.527 | 4.533 |
-| Ours-v2-balanced ‡ | 0.927 | 0.937 | 0.917 | 0.338 | 0.212 | 0.503 | 4.237 |
+| Ours-v2-balanced ‡ | 0.936 | 0.934 | 0.937 | 0.335 | 0.217 | 0.500 | 4.210 |
 | *(vertex-space ceiling)* | — | — | — | *0.516* | *0.422* | — | — |
 
 \* PV++ predicts almost nothing (recall 0.143); its MAE reflects the
 zero-diluted denominator, not force skill (predict-zero scores 0.595).
-‡ step 125k of 200k (training still in progress).
+‡ final checkpoint (200k).
 
 **Reading.** Ours-v2 leads or ties every contact metric on both datasets
 (vertex F1 +0.06 over HOPE on OpenTouch; contact IoU at statistical parity;
@@ -274,10 +274,10 @@ PVDB frame F1 within 0.001 of pad-native PressureVision) and, at matched
 contact mix (@HOPE-mix), leads every OpenTouch force-error column
 (MAE 1.38 vs 1.81, RMSE 3.60 vs 4.99). HOPE retains the PVDB magnitude columns
 (MAE/RMSE/vol IoU); the balanced run — designed against the measured loss
-biases of §4 — is closing exactly those (0.527 → 0.503 MAE, 4.53 → 4.24 RMSE,
-vol IoU 0.173 → 0.212) while holding contact — its 0.338 contact IoU now the
+biases of §4 — closed exactly those (0.527 → 0.500 MAE, 4.53 → 4.21 RMSE,
+vol IoU 0.173 → 0.217) while holding contact — its 0.335 contact IoU the
 best of any MANO-based model (HOPE 0.328) — and is the only model evaluated on a held-out
-OpenTouch split, where it retains 0.646 vertex F1 vs HOPE's 0.660 on their
+OpenTouch split, where it retains 0.647 vertex F1 vs HOPE's 0.660 on their
 test set.
 
 ## 7. Open items
