@@ -228,12 +228,12 @@ v2 models lead all force-error columns.*
 | HOPE | 0.905 | 0.891 | 0.920 | 0.328 | 0.218 | 0.449 | **2.314** |
 | Ours-v1 | 0.808 | 0.875 | 0.750 | 0.140 | 0.087 | 0.582 | 4.882 |
 | Ours-v2 | 0.938 | 0.919 | **0.958** | 0.327 | 0.173 | 0.527 | 4.533 |
-| Ours-v2-balanced ‡ | 0.927 | 0.937 | 0.917 | pending | pending | 0.503 | 4.237 |
+| Ours-v2-balanced ‡ | 0.927 | 0.937 | 0.917 | 0.338 | 0.212 | 0.503 | 4.237 |
 | *(vertex-space ceiling)* | — | — | — | *0.516* | *0.422* | — | — |
 
 \* PV++ predicts almost nothing (recall 0.143); its MAE reflects the
 zero-diluted denominator, not force skill (predict-zero scores 0.595).
-‡ step 125k of 200k; IoU evaluation queued.
+‡ step 125k of 200k (training still in progress).
 
 **Reading.** Ours-v2 leads or ties every contact metric on both datasets
 (vertex F1 +0.06 over HOPE on OpenTouch; contact IoU at statistical parity;
@@ -241,8 +241,9 @@ PVDB frame F1 within 0.001 of pad-native PressureVision) and, at matched
 contact mix (@HOPE-mix), leads every OpenTouch force-error column
 (MAE 1.38 vs 1.81, RMSE 3.60 vs 4.99). HOPE retains the PVDB magnitude columns
 (MAE/RMSE/vol IoU); the balanced run — designed against the measured loss
-biases of §3 — is closing exactly those (0.527 → 0.503 MAE, 4.53 → 4.24 RMSE)
-while holding contact, and is the only model evaluated on a held-out
+biases of §3 — is closing exactly those (0.527 → 0.503 MAE, 4.53 → 4.24 RMSE,
+vol IoU 0.173 → 0.212) while holding contact — its 0.338 contact IoU now the
+best of any MANO-based model (HOPE 0.328) — and is the only model evaluated on a held-out
 OpenTouch split, where it retains 0.646 vertex F1 vs HOPE's 0.660 on their
 test set.
 
