@@ -98,13 +98,73 @@ measure): Ω_OT is the static 267-vertex glove area (100% of frames);
 Ω_PVDB is the per-frame pad-visible band (median 28 vertices, empty in 33% of
 frames). Contact ground truth is derived from force: contact = 1[p > τ],
 τ = 1 kPa. Outside Ω the force loss is silent; predictions there are
-disciplined only indirectly, through the contact gate (§3.1).
+disciplined only indirectly, through the contact gate (§4.1).
 
 ---
 
-## 3. Training loss: diagnosis and changes
+## 3. The v2 model: two-stream vertex-anchored readout
 
-### 3.1 The loss as it was
+The pose backbone is never touched: a frozen ViT-H encodes each frame into a
+16×12 grid of 1280-d patch tokens, and the frozen stream A turns those into
+MANO pose. All touch learning happens in a parallel **stream B** that reads
+the *same* frozen visual features through its own temporal module — so
+contact/force training cannot perturb pose — and replaces v1's single fused
+global token with a **per-vertex readout**: each of the 778 MANO vertices is
+a learned query that cross-attends the patch tokens of its own frame,
+reading pressure from the image region it corresponds to.
+
+```mermaid
+flowchart LR
+  IN["input clip<br/>16 frames, 256×256 crops"] --> VIT["ViT-H backbone<br/><b>frozen</b>, 630M<br/>16×12 patch tokens, 1280-d"]
+  subgraph SA["stream A — pose (frozen)"]
+    STA["temporal attention<br/>st_module, 13.9M"] --> HEAD["MANO head"] --> MESH["θ, β, cam →<br/>posed mesh, 778 verts"]
+  end
+  subgraph SB["stream B — touch (trainable, 13.9M + 0.4M)"]
+    STB["temporal attention<br/>st_module_touch<br/>(warm-started copy of A)"] --> VTH["VertexTouchHead"]
+  end
+  VIT --> STA
+  VIT --> STB
+  VTH --> CV["contact logits ĉᵥ (778)"]
+  VTH --> PV["force p̃ᵥ (778)"]
+  CV --> GATE["gate<br/>p̂ᵥ = σ(ĉᵥ)·relu(p̃ᵥ)·s"]
+  PV --> GATE
+  GATE --> RES["pressure field on<br/>stream-A mesh"]
+  MESH --> RES
+```
+
+Inside the VertexTouchHead (~0.4M params, sized like HOPE's readout):
+
+```mermaid
+flowchart LR
+  F["stream-B frame features<br/>16×12×1280"] --> PR["Linear 1280→64"] --> MEM["192 memory tokens"]
+  Q["778 learned vertex queries<br/>64-d embeddings"] --> DEC["Transformer decoder<br/>L=2, 4 heads, d=64<br/>(vertex ↔ patch cross-attention)"]
+  MEM --> DEC
+  DEC --> O["Linear 64→2 per vertex"]
+  O --> C["contact logit ĉᵥ"]
+  O --> P["normalized force p̃ᵥ"]
+```
+
+Three design decisions worth defending in review:
+
+1. **Spatial correspondence over global pooling** (v1 → v2): v1 predicted
+   778 pressures from one 1024-d fused token — a severe bottleneck for a
+   spatially structured target. v2's cross-attention gives every vertex its
+   own view of the feature map; this is the single change behind the
+   vertex-F1 jump (0.151 → 0.720) and PVDB contact IoU (0.140 → 0.327).
+2. **A separate touch stream, not shared fine-tuning**: duplicating the
+   temporal module (warm-started from stage-1) lets touch features
+   specialize without moving pose — the pose metrics are bit-identical to
+   the frozen tracker by construction.
+3. **Gated output**: force is only emitted where the contact head fires
+   (p̂ = σ(ĉ)·relu(p̃)·s). The gate is output-only — the losses (§4) see the
+   raw heads — so contact discipline suppresses false force at inference
+   without coupling the gradients.
+
+---
+
+## 4. Training loss: diagnosis and changes
+
+### 4.1 The loss as it was
 
 With per-vertex contact logits ĉ_v and normalized pressure p̂_v (scale
 s = 110 kPa), gated output p̂ = σ(ĉ)·relu(p̃)·s, the stage-2 loss was
@@ -114,7 +174,7 @@ s = 110 kPa), gated output p̂ = σ(ĉ)·relu(p̃)·s, the stage-2 loss was
   L_contact(frame) = **Σ**_{v=1..778} BCE(ĉ_v, c_v)      (a SUM)
   L_force(frame)  = (1/|Ω|) **Σ**_{v∈Ω} | p̂_v − p_v | / s  (a MEAN)
 
-### 3.2 Bias 1 — reduction inconsistency (contact ≫ force)
+### 4.2 Bias 1 — reduction inconsistency (contact ≫ force)
 
 The sum/mean mismatch makes the two terms live on different scales:
 
@@ -127,7 +187,7 @@ Eq. 6 defines *both* losses as means with λ_c = λ_p = 1; our sum-style BCE was
 an inherited house convention, and the imbalance silently rendered the nominal
 1 : 1 weighting meaningless.
 
-### 3.3 Bias 2 — OpenTouch dominance over PVDB
+### 4.3 Bias 2 — OpenTouch dominance over PVDB
 
 Sampling is an even 50/50 draw per training example, but the force-gradient
 mass is not:
@@ -144,7 +204,7 @@ mass is not:
   voice in the mix. This precisely matched the observed symptom set: OT force
   at paper level early, PVDB magnitude metrics persistently lagging.
 
-### 3.4 The corrected loss (the "balanced" run)
+### 4.4 The corrected loss (the "balanced" run)
 
   L_contact(frame) = **(1/778) Σ**_v BCE(ĉ_v, c_v)      (mean; HOPE-faithful)
   L_force = Σ_f w_f · L_force(f) / Σ_f w_f · 1[Ω_f ≠ ∅],  **w_f = 4 if f ∈ PVDB else 1**
@@ -154,14 +214,14 @@ Additionally, a **scene-level OpenTouch holdout** was carved (4 recordings,
 249 clips, 9.8%) — the first honest OpenTouch validation set; all previous OT
 numbers were train-seen.
 
-### 3.5 Validation of the fixes (controlled rerun, same architecture)
+### 4.5 Validation of the fixes (controlled rerun, same architecture)
 
 Rebalancing improved force on both datasets with no contact cost; see the
 main tables below (Ours-balanced row).
 
 ---
 
-## 4. Evaluation fairness (established alongside)
+## 5. Evaluation fairness (established alongside)
 
 - **Split**: our PVDB train partition matches HOPE's at exactly 1,672
   sequences; test = the official val_fold_5 (~99% sequence overlap; the delta
@@ -189,7 +249,7 @@ per clip; HOPE's test: 24,544 frames). OpenTouch train-seen set: 2,538 clips /
 27,018 frames (3,984 scored) — larger than HOPE's own OT test split
 (190 clips / 18,062 frames).
 
-## 5. Main results (paper-format: HOPE's metrics and baselines only)
+## 6. Main results (paper-format: HOPE's metrics and baselines only)
 
 **Table 1 — OpenTouch** (baseline numbers from HOPE Tab. 1)
 
@@ -241,13 +301,13 @@ PVDB frame F1 within 0.001 of pad-native PressureVision) and, at matched
 contact mix (@HOPE-mix), leads every OpenTouch force-error column
 (MAE 1.38 vs 1.81, RMSE 3.60 vs 4.99). HOPE retains the PVDB magnitude columns
 (MAE/RMSE/vol IoU); the balanced run — designed against the measured loss
-biases of §3 — is closing exactly those (0.527 → 0.503 MAE, 4.53 → 4.24 RMSE,
+biases of §4 — is closing exactly those (0.527 → 0.503 MAE, 4.53 → 4.24 RMSE,
 vol IoU 0.173 → 0.212) while holding contact — its 0.338 contact IoU now the
 best of any MANO-based model (HOPE 0.328) — and is the only model evaluated on a held-out
 OpenTouch split, where it retains 0.646 vertex F1 vs HOPE's 0.660 on their
 test set.
 
-## 6. Open items
+## 7. Open items
 
 1. Author follow-ups: her evaluation Ω definition and OpenTouch train/test
    split (would remove the two remaining comparability asterisks).
